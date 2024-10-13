@@ -1,13 +1,20 @@
 import React from 'react';
-import { View, Text, FlatList, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Dimensions } from 'react-native';
 import { useSelector } from 'react-redux';
 import MealCard from '../../components/MealCard';
 
 const FavoritesScreen = ({ navigation }) => {
     const { meals } = useSelector(state => state.favorites);
 
+    const renderItem = ({ item }) => (
+        <MealCard
+            meal={item}
+            onPress={() => navigation.navigate('MealDetails', { mealId: item.idMeal })}
+        />
+    );
+
     return (
-        <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.container}>
             <Text style={styles.header}>Favorite Meals</Text>
             {meals.length === 0 ? (
                 <Text style={styles.empty}>No favorite meals.</Text>
@@ -15,24 +22,41 @@ const FavoritesScreen = ({ navigation }) => {
                 <FlatList
                     data={meals}
                     keyExtractor={item => item.idMeal}
-                    renderItem={({ item }) => (
-                        <MealCard
-                            meal={item}
-                            onPress={() => navigation.navigate('MealDetails', { mealId: item.idMeal })}
-                        />
-                    )}
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
+                    renderItem={renderItem}
+                    contentContainerStyle={styles.listContent}
+                    showsVerticalScrollIndicator={false}
                 />
             )}
-        </ScrollView>
+        </View>
     );
 };
 
+const { width } = Dimensions.get('window');
+const CARD_MARGIN = 10;
+const CARD_WIDTH = width - CARD_MARGIN * 2;
+
 const styles = StyleSheet.create({
-    container: { padding: 10 },
-    header: { fontSize: 20, fontWeight: 'bold', marginVertical: 10, color: '#333' },
-    empty: { fontSize: 16, color: '#555', marginBottom: 10 },
+    container: {
+        flex: 1,
+        padding: CARD_MARGIN,
+        backgroundColor: '#f9f9f9',
+    },
+    header: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        marginBottom: 15,
+        color: '#333',
+        textAlign: 'center',
+    },
+    empty: {
+        fontSize: 18,
+        color: '#555',
+        textAlign: 'center',
+        marginTop: 20,
+    },
+    listContent: {
+        paddingBottom: 20,
+    },
 });
 
 export default FavoritesScreen;

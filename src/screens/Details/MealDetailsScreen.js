@@ -87,16 +87,56 @@ const MealDetailsScreen = ({ route }) => {
 };
 
 const styles = StyleSheet.create({
-    container: { padding: 15 },
-    image: { width: '100%', height: 250, borderRadius: 15 },
-    title: { fontSize: 24, fontWeight: 'bold', marginVertical: 10, color: '#333' },
-    category: { fontSize: 18, color: '#777', marginBottom: 10 },
-    sectionHeader: { fontSize: 20, fontWeight: 'bold', marginTop: 15, marginBottom: 5, color: '#333' },
-    ingredient: { fontSize: 16, marginLeft: 10, marginBottom: 2, color: '#555' },
-    instructions: { fontSize: 16, marginTop: 5, color: '#555' },
-    buttonContainer: { marginTop: 20 },
-    loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    container: {
+        padding: 15
+    },
+    image: {
+        width: '100%',
+        height: 250,
+        borderRadius: 15
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginVertical: 10,
+        color: '#333'
+    },
+    category: {
+        fontSize: 18,
+        color: '#777',
+        marginBottom: 10
+    },
+    sectionHeader: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginTop: 15,
+        marginBottom: 5,
+        color: '#333'
+    },
+    ingredient: {
+        fontSize: 16,
+        marginLeft: 10,
+        marginBottom: 2,
+        color: '#555'
+    },
+    instructions: {
+        fontSize: 16,
+        marginTop: 5,
+        color: '#555'
+    },
+    buttonContainer: {
+        marginTop: 20
+    },
+    loader: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    center: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
 });
 
 export default MealDetailsScreen;

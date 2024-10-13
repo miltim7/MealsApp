@@ -1,34 +1,37 @@
 import React, { useEffect, useState } from 'react';
-import { View, FlatList, TextInput, StyleSheet, ActivityIndicator, Text, Button } from 'react-native';
+import { View, FlatList, TextInput, StyleSheet, ActivityIndicator, Text, TouchableOpacity } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchMeals, fetchRandomMeal } from '../../store/mealsSlice';
+import { fetchMeals, fetchRandomMeal, fetchMealCategories } from '../../store/mealsSlice';
 import MealCard from '../../components/MealCard';
 import axios from 'axios';
 import { Picker } from '@react-native-picker/picker';
+import RandomMealModal from '../../components/RandomMealModal';
 
 const MealsScreen = ({ navigation }) => {
     const dispatch = useDispatch();
-    const { items, status, error } = useSelector(state => state.meals);
+    const { items, status, error, categories } = useSelector(state => state.meals);
     const [search, setSearch] = useState('');
     const [filteredMeals, setFilteredMeals] = useState([]);
     const [mealCategories, setMealCategories] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState('');
+    const [randomMeal, setRandomMeal] = useState(null);
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [loadingRandom, setLoadingRandom] = useState(false);
 
     useEffect(() => {
         if (status === 'idle') {
             dispatch(fetchMeals());
-            fetchCategories();
+            dispatch(fetchMealCategories());
         }
     }, [status, dispatch]);
 
-    const fetchCategories = async () => {
-        try {
-            const response = await axios.get('https://www.themealdb.com/api/json/v1/1/list.php?c=list');
-            setMealCategories(response.data.meals);
-        } catch (error) {
-            console.error('Error fetching meal categories:', error);
-        }
-    };
+    useEffect(() => {
+        // Определяем категории, которые имеют хотя бы одно блюдо
+        const categoriesWithMeals = categories.filter(category =>
+            items.some(meal => meal.strCategory === category.strCategory)
+        );
+        setMealCategories(categoriesWithMeals);
+    }, [categories, items]);
 
     useEffect(() => {
         let filtered = items;
@@ -43,7 +46,42 @@ const MealsScreen = ({ navigation }) => {
         setFilteredMeals(filtered);
     }, [search, selectedCategory, items]);
 
-    if (status === 'loading') {
+    const handleRandomMeal = async () => {
+        try {
+            setLoadingRandom(true);
+            const action = await dispatch(fetchRandomMeal());
+            if (fetchRandomMeal.fulfilled.match(action)) {
+                setRandomMeal(action.payload);
+                setIsModalVisible(true);
+            } else {
+                console.error('Failed to fetch random meal');
+            }
+        } catch (error) {
+            console.error('Error fetching random meal:', error);
+        } finally {
+            setLoadingRandom(false);
+        }
+    };
+
+    const handleAddToFavorites = () => {
+        if (randomMeal) {
+            dispatch({ type: 'favorites/addMealToFavorites', payload: randomMeal });
+            setIsModalVisible(false);
+        }
+    };
+
+    const handleDetail = () => {
+        if (randomMeal) {
+            navigation.navigate('MealDetails', { mealId: randomMeal.idMeal });
+            setIsModalVisible(false);
+        }
+    };
+
+    const handleCloseModal = () => {
+        setIsModalVisible(false);
+    };
+
+    if (status === 'loading' || status === 'loadingCategories') {
         return <ActivityIndicator style={styles.loader} size="large" color="#0000ff" />;
     }
 
@@ -74,11 +112,9 @@ const MealsScreen = ({ navigation }) => {
                 ))}
             </Picker>
             <View style={styles.buttonContainer}>
-                <Button
-                    title="Random Meal"
-                    onPress={() => dispatch(fetchRandomMeal())}
-                    color="#e91e63"
-                />
+                <TouchableOpacity style={styles.randomButton} onPress={handleRandomMeal} disabled={loadingRandom}>
+                    <Text style={styles.randomButtonText}>{loadingRandom ? 'Loading...' : 'Random Meal'}</Text>
+                </TouchableOpacity>
             </View>
             {filteredMeals.length === 0 ? (
                 <View style={styles.center}>
@@ -98,12 +134,22 @@ const MealsScreen = ({ navigation }) => {
                     showsHorizontalScrollIndicator={false}
                 />
             )}
+            <RandomMealModal
+                visible={isModalVisible}
+                meal={randomMeal}
+                onAdd={handleAddToFavorites}
+                onDetail={handleDetail}
+                onClose={handleCloseModal}
+            />
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 10 },
+    container: {
+        flex: 1,
+        padding: 10
+    },
     search: {
         height: 40,
         borderColor: '#ccc',
@@ -119,9 +165,29 @@ const styles = StyleSheet.create({
     },
     buttonContainer: {
         marginBottom: 10,
+        alignItems: 'center',
     },
-    loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    randomButton: {
+        backgroundColor: '#e91e63',
+        paddingVertical: 12,
+        paddingHorizontal: 25,
+        borderRadius: 25,
+    },
+    randomButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    loader: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    center: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
 });
 
 export default MealsScreen;
